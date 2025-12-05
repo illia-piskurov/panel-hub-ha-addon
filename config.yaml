@@ -14,3 +14,8 @@ host_network: false
 map:
   - type: homeassistant_config
     read_only: false
+
+options:
+  ha_url: "http://homeassistant.local:8123"
+schema:
+  ha_url: str

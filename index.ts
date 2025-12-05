@@ -82,8 +82,26 @@ interface UpdatePayload {
     isAllowed?: boolean;
 }
 
+interface AddonConfig {
+    ha_url: string;
+}
+
 const AUTH_FILE_PATH = "/homeassistant/.storage/auth";
 const LOVELANCE_DASHBOARD_FILE_PATH = "/homeassistant/.storage/lovelace_dashboards";
+const OPTIONS_PATH = "/data/options.json";
+
+const getAddonConfig = async (): Promise<AddonConfig> => {
+    try {
+        const file = Bun.file(OPTIONS_PATH);
+        if (!await file.exists()) {
+            return { ha_url: "http://homeassistant.local:8123" };
+        }
+        return await file.json();
+    } catch (e) {
+        console.error("Error reading options", e);
+        return { ha_url: "http://homeassistant.local:8123" };
+    }
+}
 
 const get_dashboards_list = async (): Promise<DashboardItem[]> => {
     try {
@@ -239,7 +257,9 @@ const updateDashboardAccess = async (payload: UpdatePayload) => {
     }
 }
 
-const renderPage = (users: any[], dashboards: any[]) => {
+const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
+    const cleanHaUrl = haUrl.replace(/\/$/, "");
+
     return `
     <!DOCTYPE html>
     <html lang="en">
@@ -309,7 +329,7 @@ const renderPage = (users: any[], dashboards: any[]) => {
                     <div class="dashboard-header">
                         <span>${dash.title}</span>
                         <span class="badge">${dash.id}</span>
-                        <a href="/${dash.url}" target="_blank" class="btn" style="font-size:0.8em; margin-left:auto; text-decoration:none">Open ↗</a>
+                        <a href="${cleanHaUrl}/${dash.url}" target="_blank" class="btn" style="font-size:0.8em; margin-left:auto; text-decoration:none">Open ↗</a>
                     </div>
                     
                     <div class="views-container">
@@ -458,9 +478,12 @@ const server = Bun.serve({
         }
 
         if (url.pathname === "/") {
+            const config = await getAddonConfig();
+
             const users = await fetchUsersData();
             const dashboards = await fetchDashboardsData();
-            const html = renderPage(users, dashboards);
+
+            const html = renderPage(users, dashboards, config.ha_url);
             return new Response(html, { headers: { "Content-Type": "text/html" } });
         }
 
@@ -469,3 +492,9 @@ const server = Bun.serve({
 });
 
 console.log(`Server running at ${server.url}`);
+
+const { stdout, stderr } = Bun.spawnSync(["ls", "-la", "/data"]);
+
+console.log("LS RESULT:");
+console.log(stdout.toString());
+console.log(stderr.toString());
