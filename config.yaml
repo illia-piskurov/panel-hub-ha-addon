@@ -1,0 +1,16 @@
+name: "Panel Hub"
+version: "1.0.0"
+slug: "panel_hub"
+description: "user rights management for Panels"
+arch:
+  - amd64
+  - aarch64
+startup: services
+boot: auto
+ports:
+  8000/tcp: 8000
+host_network: false
+
+map:
+  - type: homeassistant_config
+    read_only: false
