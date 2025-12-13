@@ -1,5 +1,5 @@
 name: "Panel Hub"
-version: "1.0.2"
+version: "1.0.4"
 slug: "panel_hub"
 description: "user rights management for Panels"
 arch:
@@ -14,9 +14,6 @@ ingress_port: 8000
 host_network: false
 hassio_api: true
 homeassistant_api: true
-map:
-  - type: homeassistant_config
-    read_only: false
 options:
   ha_url: "http://homeassistant.local:8123"
 schema:
