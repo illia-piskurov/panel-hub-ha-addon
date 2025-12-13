@@ -28,6 +28,10 @@ COPY --from=bun-stage /usr/local/bin/bun /usr/local/bin/bun
 # Copy installed dependencies and source code
 COPY --from=bun-stage /app /app
 
+# Copy run script
+COPY run.sh /
+RUN chmod a+x /run.sh
+
 EXPOSE 8000
 
-CMD ["bun", "run", "src/index.ts"]
+CMD ["/run.sh"]
