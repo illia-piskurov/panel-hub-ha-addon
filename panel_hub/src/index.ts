@@ -14,10 +14,18 @@ startHAListener();
 
 const server = serve({
     port: 8000,
-    idleTimeout: 120, // Add this - 2 minute timeout for SSE connections
+    idleTimeout: 120,
     async fetch(req) {
         const url = new URL(req.url);
-        if (url.pathname === "/api/stream") {
+        
+        // Strip ingress prefix if present
+        let pathname = url.pathname;
+        const ingressPrefix = process.env.INGRESS_PATH || "";
+        if (ingressPrefix && pathname.startsWith(ingressPrefix)) {
+            pathname = pathname.substring(ingressPrefix.length) || "/";
+        }
+        
+        if (pathname === "/api/stream") {
             let controller: ReadableStreamDefaultController;
             let heartbeatInterval: Timer;
             return new Response(
@@ -49,11 +57,11 @@ const server = serve({
                 },
             );
         }
-        if (url.pathname === "/api/users")
+        if (pathname === "/api/users")
             return Response.json(await fetchUsersData());
-        if (url.pathname === "/api/structure")
+        if (pathname === "/api/structure")
             return Response.json(await fetchDashboardsData());
-        if (url.pathname === "/api/update" && req.method === "POST") {
+        if (pathname === "/api/update" && req.method === "POST") {
             try {
                 const payload = (await req.json()) as UpdatePayload;
                 const result = await updateDashboardAccess(payload);
@@ -70,7 +78,7 @@ const server = serve({
                 );
             }
         }
-        if (url.pathname === "/") {
+        if (pathname === "/") {
             const config = await getAddonConfig();
             const users = await fetchUsersData();
             const dashboards = await fetchDashboardsData();
