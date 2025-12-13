@@ -1,26 +1,33 @@
 ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM $BUILD_FROM as base
 
-# Install Bun
-RUN apk add --no-cache curl unzip \
-    && curl -fsSL https://bun.sh/install | bash \
-    && ln -s /root/.bun/bin/bun /usr/local/bin/bun
+# Multi-stage build: First stage with Bun
+FROM oven/bun:1-alpine as bun-stage
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files first (for better caching)
+# Copy package files and install dependencies
 COPY package.json bun.lock* ./
-
-# Install dependencies
 RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY src ./src
 COPY tsconfig.json ./
 
-# Expose port
+# Second stage: Copy Bun and app to Home Assistant base
+FROM base
+
+# Install bash for bashio
+RUN apk add --no-cache bash
+
+WORKDIR /app
+
+# Copy Bun binary from bun-stage
+COPY --from=bun-stage /usr/local/bin/bun /usr/local/bin/bun
+
+# Copy installed dependencies and source code
+COPY --from=bun-stage /app /app
+
 EXPOSE 8000
 
-# Start the application
 CMD ["bun", "run", "src/index.ts"]
