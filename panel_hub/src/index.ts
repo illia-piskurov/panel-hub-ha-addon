@@ -14,9 +14,9 @@ startHAListener();
 
 const server = serve({
     port: 8000,
+    idleTimeout: 120, // Add this - 2 minute timeout for SSE connections
     async fetch(req) {
         const url = new URL(req.url);
-
         if (url.pathname === "/api/stream") {
             let controller: ReadableStreamDefaultController;
             let heartbeatInterval: Timer;
@@ -49,12 +49,10 @@ const server = serve({
                 },
             );
         }
-
         if (url.pathname === "/api/users")
             return Response.json(await fetchUsersData());
         if (url.pathname === "/api/structure")
             return Response.json(await fetchDashboardsData());
-
         if (url.pathname === "/api/update" && req.method === "POST") {
             try {
                 const payload = (await req.json()) as UpdatePayload;
@@ -72,7 +70,6 @@ const server = serve({
                 );
             }
         }
-
         if (url.pathname === "/") {
             const config = await getAddonConfig();
             const users = await fetchUsersData();
@@ -82,7 +79,6 @@ const server = serve({
                 headers: { "Content-Type": "text/html" },
             });
         }
-
         return new Response("Not Found", { status: 404 });
     },
 });
