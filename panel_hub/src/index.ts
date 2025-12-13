@@ -25,6 +25,9 @@ const server = serve({
             pathname = pathname.substring(ingressPrefix.length) || "/";
         }
         
+        // Add debug logging
+        console.log(`[${new Date().toISOString()}] ${req.method} ${pathname}`);
+        
         if (pathname === "/api/stream") {
             let controller: ReadableStreamDefaultController;
             let heartbeatInterval: Timer;
@@ -57,13 +60,35 @@ const server = serve({
                 },
             );
         }
-        if (pathname === "/api/users")
-            return Response.json(await fetchUsersData());
-        if (pathname === "/api/structure")
-            return Response.json(await fetchDashboardsData());
+        
+        if (pathname === "/api/users") {
+            console.log("[DEBUG] Fetching users...");
+            try {
+                const users = await fetchUsersData();
+                console.log(`[DEBUG] Found ${users.length} users`);
+                return Response.json(users);
+            } catch (e) {
+                console.error("[ERROR] Failed to fetch users:", e);
+                return Response.json({ error: String(e) }, { status: 500 });
+            }
+        }
+        
+        if (pathname === "/api/structure") {
+            console.log("[DEBUG] Fetching dashboards...");
+            try {
+                const dashboards = await fetchDashboardsData();
+                console.log(`[DEBUG] Found ${dashboards.length} dashboards`);
+                return Response.json(dashboards);
+            } catch (e) {
+                console.error("[ERROR] Failed to fetch dashboards:", e);
+                return Response.json({ error: String(e) }, { status: 500 });
+            }
+        }
+        
         if (pathname === "/api/update" && req.method === "POST") {
             try {
                 const payload = (await req.json()) as UpdatePayload;
+                console.log("[DEBUG] Update request:", payload);
                 const result = await updateDashboardAccess(payload);
                 if (result.success) return Response.json({ success: true });
                 else
@@ -72,23 +97,34 @@ const server = serve({
                         { status: 500 },
                     );
             } catch (e) {
+                console.error("[ERROR] Update failed:", e);
                 return Response.json(
                     { success: false, error: "Invalid JSON" },
                     { status: 400 },
                 );
             }
         }
-        if (pathname === "/") {
-            const config = await getAddonConfig();
-            const users = await fetchUsersData();
-            const dashboards = await fetchDashboardsData();
-            const html = renderPage(users, dashboards, config.ha_url);
-            return new Response(html, {
-                headers: { "Content-Type": "text/html" },
-            });
+        
+        if (pathname === "/" || pathname === "") {
+            console.log("[DEBUG] Rendering main page...");
+            try {
+                const config = await getAddonConfig();
+                const users = await fetchUsersData();
+                const dashboards = await fetchDashboardsData();
+                console.log(`[DEBUG] Rendering with ${users.length} users, ${dashboards.length} dashboards`);
+                const html = renderPage(users, dashboards, config.ha_url);
+                return new Response(html, {
+                    headers: { "Content-Type": "text/html" },
+                });
+            } catch (e) {
+                console.error("[ERROR] Failed to render page:", e);
+                return new Response(`Error: ${String(e)}`, { status: 500 });
+            }
         }
+        
+        console.log(`[WARN] Not found: ${pathname}`);
         return new Response("Not Found", { status: 404 });
     },
 });
 
-console.log(`Server running at ${server.url}`);
+console.log(`✅ Server running at http://0.0.0.0:${server.port}`);
