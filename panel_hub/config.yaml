@@ -1,0 +1,23 @@
+name: "Panel Hub"
+version: "1.0.0"
+slug: "panel_hub"
+description: "user rights management for Panels"
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+ports:
+  8000/tcp: 8000
+host_network: false
+hassio_api: true
+homeassistant_api: true
+
+map:
+  - type: homeassistant_config
+    read_only: false
+
+options:
+  ha_url: "http://homeassistant.local:8123"
+schema:
+  ha_url: str
