@@ -71,7 +71,7 @@ MIT
 Here's the complete working configuration for this add-on:
 ```yaml
 name: "Panel Hub"
-version: "1.0.9"
+version: "1.0.0"
 slug: "panel_hub"
 description: "user rights management for Panels"
 arch:
