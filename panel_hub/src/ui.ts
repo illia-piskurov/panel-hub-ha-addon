@@ -56,7 +56,7 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             let haUrl = "${cleanHaUrl}";
 
             const statusInd = document.getElementById('status-indicator');
-            const evtSource = new EventSource("/api/stream");
+            const evtSource = new EventSource("./api/stream");
             
             evtSource.onopen = () => {
                 statusInd.style.background = "#4caf50"; 
@@ -75,8 +75,8 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             async function reloadData() {
                 try {
                     const [dashRes, userRes] = await Promise.all([
-                        fetch('/api/structure'),
-                        fetch('/api/users')
+                        fetch('./api/structure'),
+                        fetch('./api/users')
                     ]);
                     currentDashboards = await dashRes.json();
                     currentUsers = await userRes.json();
@@ -147,7 +147,7 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
 
             async function sendUpdate(payload) {
                 try {
-                    const res = await fetch('/api/update', {
+                    const res = await fetch('./api/update', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
