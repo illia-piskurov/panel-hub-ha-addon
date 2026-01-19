@@ -5,8 +5,6 @@ A high-performance Home Assistant Add-on built with [Bun](https://bun.sh) to eas
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Arch](https://img.shields.io/badge/arch-aarch64%20|%20amd64-green)
 
-> **Note:** This is a fork of [illia-piskurov/panel-hub-ha-addon](https://github.com/illia-piskurov/panel-hub-ha-addon)
-
 ## 📋 Description
 
 Managing dashboard visibility in Home Assistant often requires editing YAML files and manually adding `visible` blocks for specific user IDs. **Panel Hub** provides a clean, visual interface to manage these permissions on the fly.
