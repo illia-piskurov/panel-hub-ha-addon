@@ -1,5 +1,5 @@
 name: "Panel Hub"
-version: "1.0.0"
+version: "1.0.1"
 slug: "panel_hub"
 description: "user rights management for Panels"
 arch:

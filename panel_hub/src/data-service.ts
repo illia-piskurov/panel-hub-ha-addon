@@ -41,7 +41,7 @@ const get_dashboards_list = async (): Promise<DashboardItem[]> => {
 const get_dashboard_details = async (
     dashboard: HADashboardItem,
 ): Promise<AppDashboardInfo> => {
-    const filename = `lovelace.${dashboard.id}`;
+    const filename = dashboard.id === "" ? "lovelace" : `lovelace.${dashboard.id}`;
     const f = file(`/homeassistant/.storage/${filename}`);
     const result: AppDashboardInfo = {
         id: dashboard.id,
@@ -98,11 +98,21 @@ export const fetchUsersData = async () => {
 
 export const fetchDashboardsData = async () => {
     const dashboardsList = await get_dashboards_list();
-    return Promise.all(dashboardsList.map((d) => get_dashboard_details(d)));
+
+    // Add the default Lovelace dashboard (Overview)
+    const defaultDashboard: HADashboardItem = {
+        id: "",
+        title: "Overview",
+        url_path: "lovelace",
+        mode: "storage",
+    };
+
+    const allDashboards = [defaultDashboard, ...dashboardsList];
+    return Promise.all(allDashboards.map((d) => get_dashboard_details(d)));
 };
 
 export const updateDashboardAccess = async (payload: UpdatePayload) => {
-    const filename = `lovelace.${payload.dashId}`;
+    const filename = payload.dashId === "" ? "lovelace" : `lovelace.${payload.dashId}`;
     const f = file(`/homeassistant/.storage/${filename}`);
 
     if (!(await f.exists()))
