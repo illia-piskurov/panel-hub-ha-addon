@@ -16,12 +16,19 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             .btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
             .btn:hover { background: #3c3c3c; }
             .dashboard-card { background: var(--card-bg); border-radius: 8px; margin-bottom: 20px; padding: 15px; border: 1px solid var(--border); }
-            .dashboard-header { font-size: 1.2em; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+            .dashboard-header { font-size: 1.2em; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; cursor: pointer; user-select: none; }
+            .dashboard-header:hover { background: rgba(255,255,255,0.03); margin: -5px -15px 10px -15px; padding: 5px 15px 10px 15px; border-radius: 8px 8px 0 0; }
+            .toggle-icon { transition: transform 0.3s; font-size: 0.8em; }
+            .toggle-icon.collapsed { transform: rotate(-90deg); }
+            .views-container { max-height: 5000px; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.3s; opacity: 1; }
+            .views-container.collapsed { max-height: 0; opacity: 0; }
             .view-item { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; }
             .view-header { display: flex; justify-content: space-between; align-items: center; }
-            .view-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
-            .users-list { margin-top: 10px; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; transition: opacity 0.3s; }
+            .view-title { font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; flex: 1; }
+            .view-title:hover { opacity: 0.8; }
+            .users-list { margin-top: 10px; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; transition: max-height 0.3s ease-out, opacity 0.3s; max-height: 2000px; overflow: hidden; }
             .users-list.hidden { display: none; }
+            .users-list.collapsed { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; }
             .users-list.loading { opacity: 0.5; pointer-events: none; }
             .user-checkbox { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s; }
             .user-checkbox:hover { background: rgba(255,255,255,0.1); }
@@ -86,18 +93,20 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
 
             function renderApp() {
                 const app = document.getElementById('app');
-                const html = currentDashboards.map(dash => \`
+                const html = currentDashboards.map((dash, dashIndex) => \`
                     <div class="dashboard-card">
-                        <div class="dashboard-header">
+                        <div class="dashboard-header" onclick="toggleDashboard('\${dashIndex}')">
+                            <span class="toggle-icon collapsed" id="dash-toggle-\${dashIndex}">▼</span>
                             <span>\${dash.title}</span>
                             <span class="badge">\${dash.url}</span>
-                            <a href="\${haUrl}/\${dash.url}" target="_blank" class="btn" style="font-size:0.8em; margin-left:auto; text-decoration:none">Open ↗</a>
+                            <a href="\${haUrl}/\${dash.url}" target="_blank" class="btn" style="font-size:0.8em; margin-left:auto; text-decoration:none" onclick="event.stopPropagation()">Open ↗</a>
                         </div>
-                        <div class="views-container">
-                            \${dash.views.map((view) => \`
+                        <div class="views-container collapsed" id="dash-views-\${dashIndex}">
+                            \${dash.views.map((view, viewIndex) => \`
                                 <div class="view-item">
                                     <div class="view-header">
-                                        <div class="view-title">
+                                        <div class="view-title" onclick="toggleViewUsers('\${dashIndex}', '\${viewIndex}')">
+                                            <span class="toggle-icon collapsed" id="view-toggle-\${dashIndex}-\${viewIndex}">▼</span>
                                             <span>\${view.icon ? '👁️' : '#'}</span>
                                             \${view.title} <span style="font-weight:normal; opacity:0.6">(\${view.path})</span>
                                         </div>
@@ -106,7 +115,7 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                                             <span class="slider"></span>
                                         </label>
                                     </div>
-                                    <div class="users-list \${view.isPublic ? 'hidden' : ''}" id="users-\${dash.id}-\${view.path}">
+                                    <div class="users-list \${view.isPublic ? 'hidden' : 'collapsed'}" id="users-\${dash.id}-\${view.path}">
                                         \${currentUsers.map(user => \`
                                             <label class="user-checkbox">
                                                 <input type="checkbox" value="\${user.id}" \${view.allowedUserIds.includes(user.id) ? 'checked' : ''} onchange="updatePermission('\${dash.id}', '\${dash.url}', '\${view.path}', '\${user.id}', this.checked)">
@@ -121,6 +130,25 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                 \`).join('');
                 app.innerHTML = html;
             }
+            
+            function toggleDashboard(dashIndex) {
+                const container = document.getElementById('dash-views-' + dashIndex);
+                const icon = document.getElementById('dash-toggle-' + dashIndex);
+                container.classList.toggle('collapsed');
+                icon.classList.toggle('collapsed');
+            }
+            
+            function toggleViewUsers(dashIndex, viewIndex) {
+                const icon = document.getElementById('view-toggle-' + dashIndex + '-' + viewIndex);
+                icon.classList.toggle('collapsed');
+                
+                // Find the users list for this view
+                const viewItem = icon.closest('.view-item');
+                const usersList = viewItem.querySelector('.users-list');
+                if (usersList && !usersList.classList.contains('hidden')) {
+                    usersList.classList.toggle('collapsed');
+                }
+            }
 
             renderApp();
 
@@ -134,8 +162,13 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                 const success = await sendUpdate({ type: 'set_public', dashId, urlPath: dashUrl, viewPath, isPublic });
                 if (success) {
                     const userList = document.getElementById('users-' + dashId + '-' + viewPath);
-                    if (isPublic) userList.classList.add('hidden');
-                    else userList.classList.remove('hidden');
+                    if (isPublic) {
+                        userList.classList.add('hidden');
+                        userList.classList.remove('collapsed');
+                    } else {
+                        userList.classList.remove('hidden');
+                        userList.classList.add('collapsed');
+                    }
                 } else {
                     reloadData();
                 }
