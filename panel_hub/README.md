@@ -1,15 +1,13 @@
-# Panel Hub
+# Lovelace Access Control
 
 A high-performance Home Assistant Add-on built with [Bun](https://bun.sh) to easily manage user access permissions for Lovelace Dashboards and Views.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Arch](https://img.shields.io/badge/arch-aarch64%20|%20amd64-green)
 
-> **Note:** This is a fork of [illia-piskurov/panel-hub-ha-addon](https://github.com/illia-piskurov/panel-hub-ha-addon)
-
 ## 📋 Description
 
-Managing dashboard visibility in Home Assistant often requires editing YAML files and manually adding `visible` blocks for specific user IDs. **Panel Hub** provides a clean, visual interface to manage these permissions on the fly.
+Managing dashboard visibility in Home Assistant often requires editing YAML files and manually adding `visible` blocks for specific user IDs. **Lovelace Access Control** provides a clean, visual interface to manage these permissions on the fly.
 
 **Key Features:**
 * **Visual Management:** Toggle views between "Public" (visible to everyone) and "Private" (restricted).
@@ -17,18 +15,16 @@ Managing dashboard visibility in Home Assistant often requires editing YAML file
 * **Real-time Updates:** Uses Server-Sent Events (SSE) to update the interface instantly across all open windows when configuration changes.
 * **Native Integration:** Uses the official Home Assistant WebSocket API to save configurations safely.
 * **Blazing Fast:** Built on the Bun runtime for minimal resource usage and high performance.
-* **Sidebar Integration:** Appears directly in your Home Assistant sidebar for quick access.
 
 ## 🚀 Installation
 
-1. Navigate to your Home Assistant instance.
-2. Go to **Settings** > **Add-ons** > **Add-on Store**.
-3. Click the **three dots** (top right) > **Repositories**.
-4. Add the URL of this GitHub repository.
-5. Scroll down (or refresh) to find **Panel Hub**.
-6. Click **Install** and then **Start**.
-7. Enable "**Show in sidebar**" to add Panel Hub to your Home Assistant sidebar.
-8. Click **Open Web UI** or use the sidebar icon to manage your dashboards.
+1.  Navigate to your Home Assistant instance.
+2.  Go to **Settings** > **Add-ons** > **Add-on Store**.
+3.  Click the **three dots** (top right) > **Repositories**.
+4.  Add the URL of this GitHub repository.
+5.  Scroll down (or refresh) to find **Lovelace Access Control**.
+6.  Click **Install** and then **Start**.
+7.  Click **Open Web UI** to manage your dashboards.
 
 ## ⚙️ Configuration
 
@@ -41,10 +37,11 @@ The add-on works out-of-the-box for permission management. However, to ensure th
 * **Type:** `string`
 
 #### Example Configuration:
+
 ```yaml
-ha_url: "http://192.168.1.100:8123"
+ha_url: "[http://192.168.1.100:8123](http://192.168.1.100:8123)"
 # OR for https
-ha_url: "https://my-ha.duckdns.org"
+ha_url: "[https://my-ha.duckdns.org](https://my-ha.duckdns.org)"
 ```
 
 ## 🛠 Technical Details
@@ -60,49 +57,43 @@ This add-on is a containerized application running:
 
 * **Home Assistant OS** or **Supervised** installation.
 * User permissions to install add-ons.
-* At least one Lovelace dashboard configured.
 
 ## 📄 License
 
 MIT
 
-## 🙏 Credits
-
-Original project by [illia-piskurov](https://github.com/illia-piskurov) - [panel-hub-ha-addon](https://github.com/illia-piskurov/panel-hub-ha-addon)
-
 ---
 
-## Complete `config.yaml` Reference
+### Important: Update your `config.yaml`
 
-Here's the complete working configuration for this add-on:
+To make the configuration option (`ha_url`) visible and editable in the Home Assistant Add-on "Configuration" tab, you must update the `config.yaml` file in your project folder to include the `options` and `schema` blocks:
+
 ```yaml
-name: "Panel Hub"
+name: "Lovelace Manager"
 version: "1.0.0"
-slug: "panel_hub"
-description: "user rights management for Panels"
+slug: "lovelace_manager"
+description: "Manage dashboard access"
+url: "[https://github.com/your-username/my-ha-addons](https://github.com/your-username/my-ha-addons)"
 arch:
-  - amd64
   - aarch64
+  - amd64
 startup: application
 boot: auto
-panel_icon: mdi:shield-account
-panel_title: Panel Hub
-ingress: true
-ingress_port: 8000
-ingress_stream_timeout: 120
+init: false
+
+ports:
+  8000/tcp: 8000
+
 hassio_api: true
 homeassistant_api: true
+
 map:
-  - homeassistant_config:rw
+  - config:rw
+
+# --- ADD THIS BLOCK ---
 options:
-  ha_url: "http://homeassistant.local:8123"
+  ha_url: "[http://homeassistant.local:8123](http://homeassistant.local:8123)"
 schema:
   ha_url: str
+# ----------------------
 ```
-
-### Key Configuration Notes:
-
-- **`ingress: true`** - Uses Home Assistant's built-in proxy (no port exposure needed)
-- **`map: homeassistant_config:rw`** - Required for accessing dashboard and user data
-- **`panel_icon`** and **`panel_title`** - Adds the add-on to your Home Assistant sidebar
-- **No `ports:` section** - Ingress handles routing internally
