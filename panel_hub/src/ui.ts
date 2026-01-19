@@ -88,6 +88,62 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             let currentUsers = ${JSON.stringify(users)};
             let haUrl = "${cleanHaUrl}";
             let activeTab = 'dashboards';
+            let expandedState = {};
+
+            function saveExpandedState() {
+                expandedState = {};
+                // Save dashboard states
+                document.querySelectorAll('[id^="dash-views-"]').forEach(el => {
+                    const dashIndex = el.id.replace('dash-views-', '');
+                    expandedState['dash-' + dashIndex] = !el.classList.contains('collapsed');
+                });
+                // Save view states
+                document.querySelectorAll('[id^="users-"]').forEach(el => {
+                    if (!el.classList.contains('hidden')) {
+                        expandedState['view-' + el.id] = !el.classList.contains('collapsed');
+                    }
+                });
+                // Save user card states
+                document.querySelectorAll('[id^="user-access-"]').forEach(el => {
+                    const userIndex = el.id.replace('user-access-', '');
+                    expandedState['user-' + userIndex] = !el.classList.contains('collapsed');
+                });
+            }
+
+            function restoreExpandedState() {
+                Object.keys(expandedState).forEach(key => {
+                    if (key.startsWith('dash-')) {
+                        const dashIndex = key.replace('dash-', '');
+                        const el = document.getElementById('dash-views-' + dashIndex);
+                        const icon = document.getElementById('dash-toggle-' + dashIndex);
+                        if (el && expandedState[key]) {
+                            el.classList.remove('collapsed');
+                            if (icon) icon.classList.remove('collapsed');
+                        }
+                    } else if (key.startsWith('view-')) {
+                        const viewId = key.replace('view-users-', '');
+                        const el = document.getElementById('users-' + viewId);
+                        if (el && !el.classList.contains('hidden') && expandedState[key]) {
+                            el.classList.remove('collapsed');
+                            const match = viewId.match(/(.+)-(.+)/);
+                            if (match) {
+                                const dashIndex = match[1].split('-')[0];
+                                const viewIndex = match[2];
+                                const icon = document.getElementById('view-toggle-' + dashIndex + '-' + viewIndex);
+                                if (icon) icon.classList.remove('collapsed');
+                            }
+                        }
+                    } else if (key.startsWith('user-')) {
+                        const userIndex = key.replace('user-', '');
+                        const el = document.getElementById('user-access-' + userIndex);
+                        const icon = document.getElementById('user-toggle-' + userIndex);
+                        if (el && expandedState[key]) {
+                            el.classList.remove('collapsed');
+                            if (icon) icon.classList.remove('collapsed');
+                        }
+                    }
+                });
+            }
 
             const statusInd = document.getElementById('status-indicator');
             const evtSource = new EventSource("./api/stream");
@@ -108,6 +164,7 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
 
             async function reloadData() {
                 try {
+                    saveExpandedState();
                     const [dashRes, userRes] = await Promise.all([
                         fetch('./api/structure'),
                         fetch('./api/users')
@@ -115,6 +172,7 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                     currentDashboards = await dashRes.json();
                     currentUsers = await userRes.json();
                     renderApp();
+                    restoreExpandedState();
                 } catch(e) { console.error(e); }
             }
             
