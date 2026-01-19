@@ -26,6 +26,8 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             .view-header { display: flex; justify-content: space-between; align-items: center; }
             .view-title { font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; flex: 1; }
             .view-title:hover { opacity: 0.8; }
+            .view-title.disabled { cursor: default; opacity: 0.6; }
+            .view-title.disabled:hover { opacity: 0.6; }
             .users-list { margin-top: 10px; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; transition: max-height 0.3s ease-out, opacity 0.3s; max-height: 2000px; overflow: hidden; }
             .users-list.hidden { display: none; }
             .users-list.collapsed { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; }
@@ -39,6 +41,23 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             input:checked + .slider { background-color: var(--primary); }
             input:checked + .slider:before { transform: translateX(20px); }
             .badge { font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: #444; }
+            .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+            .tab { padding: 10px 20px; cursor: pointer; background: transparent; border: none; color: var(--text); font-size: 1rem; border-bottom: 3px solid transparent; transition: all 0.2s; user-select: none; }
+            .tab:hover { background: rgba(255,255,255,0.05); }
+            .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+            .tab-content { display: none; }
+            .tab-content.active { display: block; }
+            .user-card { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); }
+            .user-card-header { font-size: 1.1em; font-weight: bold; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 5px; border-radius: 4px; }
+            .user-card-header:hover { background: rgba(255,255,255,0.05); }
+            .access-list { margin-top: 10px; padding-left: 10px; max-height: 3000px; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.3s; opacity: 1; }
+            .access-list.collapsed { max-height: 0; opacity: 0; margin-top: 0; }
+            .access-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin-top: 5px; background: rgba(255,255,255,0.05); border-radius: 4px; border-left: 3px solid var(--border); }
+            .access-item.public { border-left-color: var(--success); }
+            .access-item.private { border-left-color: #ff9800; }
+            .access-item-info { display: flex; flex-direction: column; gap: 2px; }
+            .access-item-title { font-weight: 600; }
+            .access-item-path { font-size: 0.85em; opacity: 0.7; }
             #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1; right: 30px; bottom: 30px; font-size: 17px; border-left: 5px solid var(--success); }
             #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
             @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
@@ -54,13 +73,21 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             </div>
         </div>
         
-        <div id="app">Loading...</div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboards')">By Dashboards</button>
+            <button class="tab" onclick="switchTab('users')">By Users</button>
+        </div>
+        
+        <div id="tab-dashboards" class="tab-content active"></div>
+        <div id="tab-users" class="tab-content"></div>
+        
         <div id="toast">Changes saved</div>
 
         <script>
             let currentDashboards = ${JSON.stringify(dashboards)};
             let currentUsers = ${JSON.stringify(users)};
             let haUrl = "${cleanHaUrl}";
+            let activeTab = 'dashboards';
 
             const statusInd = document.getElementById('status-indicator');
             const evtSource = new EventSource("./api/stream");
@@ -90,9 +117,28 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                     renderApp();
                 } catch(e) { console.error(e); }
             }
-
+            
+            function switchTab(tab) {
+                activeTab = tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                event.target.classList.add('active');
+                document.getElementById('tab-' + tab).classList.add('active');
+                
+                renderApp();
+            }
+            
             function renderApp() {
-                const app = document.getElementById('app');
+                if (activeTab === 'dashboards') {
+                    renderDashboardsView();
+                } else {
+                    renderUsersView();
+                }
+            }
+            
+            function renderDashboardsView() {
+                const container = document.getElementById('tab-dashboards');
                 const html = currentDashboards.map((dash, dashIndex) => \`
                     <div class="dashboard-card">
                         <div class="dashboard-header" onclick="toggleDashboard('\${dashIndex}')">
@@ -105,10 +151,11 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                             \${dash.views.map((view, viewIndex) => \`
                                 <div class="view-item">
                                     <div class="view-header">
-                                        <div class="view-title" onclick="toggleViewUsers('\${dashIndex}', '\${viewIndex}')">
-                                            <span class="toggle-icon collapsed" id="view-toggle-\${dashIndex}-\${viewIndex}">▼</span>
+                                        <div class="view-title \${view.isPublic ? 'disabled' : ''}" onclick="\${view.isPublic ? '' : 'toggleViewUsers(' + dashIndex + ', ' + viewIndex + ')'}" style="\${view.isPublic ? 'cursor: default;' : ''}">
+                                            <span class="toggle-icon \${view.isPublic ? '' : 'collapsed'}" id="view-toggle-\${dashIndex}-\${viewIndex}">\${view.isPublic ? '🔓' : '▼'}</span>
                                             <span>\${view.icon ? '👁️' : '#'}</span>
                                             \${view.title} <span style="font-weight:normal; opacity:0.6">(\${view.path})</span>
+                                            \${view.isPublic ? '<span class="badge" style="background: var(--success); margin-left: 8px;">Public</span>' : ''}
                                         </div>
                                         <label class="switch" title="Public access">
                                             <input type="checkbox" \${view.isPublic ? 'checked' : ''} onchange="togglePublic('\${dash.id}', '\${dash.url}', '\${view.path}', this.checked)">
@@ -116,19 +163,116 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                                         </label>
                                     </div>
                                     <div class="users-list \${view.isPublic ? 'hidden' : 'collapsed'}" id="users-\${dash.id}-\${view.path}">
-                                        \${currentUsers.map(user => \`
-                                            <label class="user-checkbox">
-                                                <input type="checkbox" value="\${user.id}" \${view.allowedUserIds.includes(user.id) ? 'checked' : ''} onchange="updatePermission('\${dash.id}', '\${dash.url}', '\${view.path}', '\${user.id}', this.checked)">
-                                                \${user.name}
-                                            </label>
-                                        \`).join('')}
+                                        \${view.isPublic ? 
+                                            '<div style="padding: 10px; text-align: center; color: var(--success); font-weight: 600;">🔓 Public access - available to all users</div>' :
+                                            currentUsers.map(user => \`
+                                                <label class="user-checkbox">
+                                                    <input type="checkbox" value="\${user.id}" \${view.allowedUserIds.includes(user.id) ? 'checked' : ''} onchange="updatePermission('\${dash.id}', '\${dash.url}', '\${view.path}', '\${user.id}', this.checked)">
+                                                    \${user.name}
+                                                </label>
+                                            \`).join('')
+                                        }
                                     </div>
                                 </div>
                             \`).join('')}
                         </div>
                     </div>
                 \`).join('');
-                app.innerHTML = html;
+                container.innerHTML = html;
+            }
+            
+            function renderUsersView() {
+                const container = document.getElementById('tab-users');
+                
+                const userAccessMap = {};
+                currentUsers.forEach(user => {
+                    userAccessMap[user.id] = {
+                        name: user.name,
+                        role: user.role,
+                        access: []
+                    };
+                });
+                
+                currentDashboards.forEach(dash => {
+                    dash.views.forEach(view => {
+                        const accessInfo = {
+                            dashId: dash.id,
+                            dashTitle: dash.title,
+                            dashUrl: dash.url,
+                            viewTitle: view.title,
+                            viewPath: view.path,
+                            icon: view.icon,
+                            isPublic: view.isPublic,
+                            hasAccess: false
+                        };
+                        
+                        if (view.isPublic) {
+                            Object.keys(userAccessMap).forEach(userId => {
+                                userAccessMap[userId].access.push({ ...accessInfo, hasAccess: true });
+                            });
+                        } else {
+                            view.allowedUserIds.forEach(userId => {
+                                if (userAccessMap[userId]) {
+                                    userAccessMap[userId].access.push({ ...accessInfo, hasAccess: true });
+                                }
+                            });
+                            Object.keys(userAccessMap).forEach(userId => {
+                                if (!view.allowedUserIds.includes(userId)) {
+                                    userAccessMap[userId].access.push({ ...accessInfo, hasAccess: false });
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                const html = currentUsers.map((user, userIndex) => {
+                    const userData = userAccessMap[user.id];
+                    const accessCount = userData.access.filter(a => a.hasAccess).length;
+                    const totalCount = currentDashboards.reduce((sum, d) => sum + d.views.length, 0);
+                    
+                    return \`
+                        <div class="user-card">
+                            <div class="user-card-header" onclick="toggleUserAccess('\${userIndex}')">
+                                <span class="toggle-icon collapsed" id="user-toggle-\${userIndex}">▼</span>
+                                <span>\${user.name}</span>
+                                <span class="badge">\${user.role}</span>
+                                <span class="badge" style="background: var(--primary);">\${accessCount}/\${totalCount} views</span>
+                            </div>
+                            <div class="access-list collapsed" id="user-access-\${userIndex}">
+                                \${userData.access.map(item => \`
+                                    <div class="access-item \${item.isPublic ? 'public' : (item.hasAccess ? 'private' : '')}">
+                                        <div class="access-item-info">
+                                            <div class="access-item-title">
+                                                <span>\${item.icon ? '👁️' : '#'}</span>
+                                                \${item.dashTitle} / \${item.viewTitle}
+                                            </div>
+                                            <div class="access-item-path">\${item.dashUrl}/\${item.viewPath}</div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            \${item.isPublic ? 
+                                                '<span class="badge" style="background: var(--success);">Public</span>' :
+                                                \`<label class="switch" title="Toggle access">
+                                                    <input type="checkbox" \${item.hasAccess ? 'checked' : ''} 
+                                                        onchange="updatePermission('\${item.dashId}', '\${item.dashUrl}', '\${item.viewPath}', '\${user.id}', this.checked)">
+                                                    <span class="slider"></span>
+                                                </label>\`
+                                            }
+                                        </div>
+                                    </div>
+                                \`).join('')}
+                            </div>
+                        </div>
+                    \`;
+                }).join('');
+                
+                container.innerHTML = html;
+            }
+            
+            function toggleUserAccess(userIndex) {
+                const container = document.getElementById('user-access-' + userIndex);
+                const icon = document.getElementById('user-toggle-' + userIndex);
+                container.classList.toggle('collapsed');
+                icon.classList.toggle('collapsed');
             }
             
             function toggleDashboard(dashIndex) {
@@ -142,7 +286,6 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
                 const icon = document.getElementById('view-toggle-' + dashIndex + '-' + viewIndex);
                 icon.classList.toggle('collapsed');
                 
-                // Find the users list for this view
                 const viewItem = icon.closest('.view-item');
                 const usersList = viewItem.querySelector('.users-list');
                 if (usersList && !usersList.classList.contains('hidden')) {
@@ -175,7 +318,11 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             }
 
             function updatePermission(dashId, dashUrl, viewPath, userId, isAllowed) {
-                sendUpdate({ type: 'set_user', dashId, urlPath: dashUrl, viewPath, userId, isAllowed });
+                sendUpdate({ type: 'set_user', dashId, urlPath: dashUrl, viewPath, userId, isAllowed }).then(success => {
+                    if (success) {
+                        reloadData();
+                    }
+                });
             }
 
             async function sendUpdate(payload) {
