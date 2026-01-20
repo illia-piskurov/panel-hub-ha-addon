@@ -1,3 +1,4 @@
+import { Hono } from "hono";
 import { serve } from "bun";
 import { connectedClients } from "./config";
 import {
@@ -12,119 +13,102 @@ import { renderPage } from "./ui";
 
 startHAListener();
 
+const app = new Hono();
+
+const ingressPrefix = process.env.INGRESS_PATH || "";
+
+app.use("*", async (c, next) => {
+    if (ingressPrefix && c.req.path.startsWith(ingressPrefix)) {
+        const stripped = c.req.path.slice(ingressPrefix.length) || "/";
+        c.req.path = stripped;
+    }
+
+    console.log(`[${new Date().toISOString()}] ${c.req.method} ${c.req.path}`);
+
+    await next();
+});
+
+app.get("/api/stream", (c) => {
+    let controller: ReadableStreamDefaultController;
+    let heartbeatInterval: Timer;
+
+    const stream = new ReadableStream({
+        start(ctrl) {
+            controller = ctrl;
+            connectedClients.add(controller);
+
+            heartbeatInterval = setInterval(() => {
+                try {
+                    controller.enqueue(": ping\n\n");
+                } catch {
+                    connectedClients.delete(controller);
+                    clearInterval(heartbeatInterval);
+                }
+            }, 30_000);
+        },
+        cancel() {
+            connectedClients.delete(controller);
+            clearInterval(heartbeatInterval);
+        },
+    });
+
+    return new Response(stream, {
+        headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    });
+});
+
+app.post("/api/update", async (c) => {
+    try {
+        const payload = (await c.req.json()) as UpdatePayload;
+        console.log("[DEBUG] Update request:", payload);
+
+        const result = await updateDashboardAccess(payload);
+
+        if (result.success) {
+            return c.json({ success: true });
+        }
+
+        return c.json({ success: false, error: result.error }, 500);
+    } catch (e) {
+        console.error("[ERROR] Update failed:", e);
+        return c.json({ success: false, error: "Invalid JSON" }, 400);
+    }
+});
+
+app.get("/", async (c) => {
+    console.log("[DEBUG] Rendering main page...");
+    try {
+        const config = await getAddonConfig();
+        const users = await fetchUsersData();
+        const dashboards = await fetchDashboardsData();
+
+        console.log(
+            `[DEBUG] Rendering with ${users.length} users, ${dashboards.length} dashboards`,
+        );
+
+        const html = renderPage(users, dashboards, config.ha_url);
+
+        return c.html(html);
+    } catch (e) {
+        console.error("[ERROR] Failed to render page:", e);
+        return c.text(`Error: ${String(e)}`, 500);
+    }
+});
+
+app.notFound((c) => {
+    console.log(`[WARN] Not found: ${c.req.path}`);
+    return c.text("Not Found", 404);
+});
+
 const server = serve({
     port: 8000,
     idleTimeout: 120,
-    async fetch(req) {
-        const url = new URL(req.url);
-        
-        // Strip ingress prefix if present
-        let pathname = url.pathname;
-        const ingressPrefix = process.env.INGRESS_PATH || "";
-        if (ingressPrefix && pathname.startsWith(ingressPrefix)) {
-            pathname = pathname.substring(ingressPrefix.length) || "/";
-        }
-        
-        // Add debug logging
-        console.log(`[${new Date().toISOString()}] ${req.method} ${pathname}`);
-        
-        if (pathname === "/api/stream") {
-            let controller: ReadableStreamDefaultController;
-            let heartbeatInterval: Timer;
-            return new Response(
-                new ReadableStream({
-                    start(c) {
-                        controller = c;
-                        connectedClients.add(controller);
-                        heartbeatInterval = setInterval(() => {
-                            try {
-                                controller.enqueue(": ping\n\n");
-                            } catch (e) {
-                                connectedClients.delete(controller);
-                                clearInterval(heartbeatInterval);
-                            }
-                        }, 30000);
-                    },
-                    cancel() {
-                        connectedClients.delete(controller);
-                        clearInterval(heartbeatInterval);
-                    },
-                }),
-                {
-                    headers: {
-                        "Content-Type": "text/event-stream",
-                        "Cache-Control": "no-cache",
-                        Connection: "keep-alive",
-                        "X-Accel-Buffering": "no",
-                    },
-                },
-            );
-        }
-        
-        if (pathname === "/api/users") {
-            console.log("[DEBUG] Fetching users...");
-            try {
-                const users = await fetchUsersData();
-                console.log(`[DEBUG] Found ${users.length} users`);
-                return Response.json(users);
-            } catch (e) {
-                console.error("[ERROR] Failed to fetch users:", e);
-                return Response.json({ error: String(e) }, { status: 500 });
-            }
-        }
-        
-        if (pathname === "/api/structure") {
-            console.log("[DEBUG] Fetching dashboards...");
-            try {
-                const dashboards = await fetchDashboardsData();
-                console.log(`[DEBUG] Found ${dashboards.length} dashboards`);
-                return Response.json(dashboards);
-            } catch (e) {
-                console.error("[ERROR] Failed to fetch dashboards:", e);
-                return Response.json({ error: String(e) }, { status: 500 });
-            }
-        }
-        
-        if (pathname === "/api/update" && req.method === "POST") {
-            try {
-                const payload = (await req.json()) as UpdatePayload;
-                console.log("[DEBUG] Update request:", payload);
-                const result = await updateDashboardAccess(payload);
-                if (result.success) return Response.json({ success: true });
-                else
-                    return Response.json(
-                        { success: false, error: result.error },
-                        { status: 500 },
-                    );
-            } catch (e) {
-                console.error("[ERROR] Update failed:", e);
-                return Response.json(
-                    { success: false, error: "Invalid JSON" },
-                    { status: 400 },
-                );
-            }
-        }
-        
-        if (pathname === "/" || pathname === "") {
-            console.log("[DEBUG] Rendering main page...");
-            try {
-                const config = await getAddonConfig();
-                const users = await fetchUsersData();
-                const dashboards = await fetchDashboardsData();
-                console.log(`[DEBUG] Rendering with ${users.length} users, ${dashboards.length} dashboards`);
-                const html = renderPage(users, dashboards, config.ha_url);
-                return new Response(html, {
-                    headers: { "Content-Type": "text/html" },
-                });
-            } catch (e) {
-                console.error("[ERROR] Failed to render page:", e);
-                return new Response(`Error: ${String(e)}`, { status: 500 });
-            }
-        }
-        
-        console.log(`[WARN] Not found: ${pathname}`);
-        return new Response("Not Found", { status: 404 });
-    },
+    fetch: app.fetch,
 });
 
 console.log(`✅ Server running at http://0.0.0.0:${server.port}`);

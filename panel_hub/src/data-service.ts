@@ -41,7 +41,8 @@ const get_dashboards_list = async (): Promise<DashboardItem[]> => {
 const get_dashboard_details = async (
     dashboard: HADashboardItem,
 ): Promise<AppDashboardInfo> => {
-    const filename = dashboard.id === "" ? "lovelace" : `lovelace.${dashboard.id}`;
+    const filename =
+        dashboard.id === "" ? "lovelace" : `lovelace.${dashboard.id}`;
     const f = file(`/homeassistant/.storage/${filename}`);
     const result: AppDashboardInfo = {
         id: dashboard.id,
@@ -112,7 +113,8 @@ export const fetchDashboardsData = async () => {
 };
 
 export const updateDashboardAccess = async (payload: UpdatePayload) => {
-    const filename = payload.dashId === "" ? "lovelace" : `lovelace.${payload.dashId}`;
+    const filename =
+        payload.dashId === "" ? "lovelace" : `lovelace.${payload.dashId}`;
     const f = file(`/homeassistant/.storage/${filename}`);
 
     if (!(await f.exists()))
