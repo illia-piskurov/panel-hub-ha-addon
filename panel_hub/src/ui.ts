@@ -50,7 +50,7 @@ export const renderPage = (users: any[], dashboards: any[], haUrl: string) => {
             .user-card { background: var(--card-bg); border-radius: 8px; margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); }
             .user-card-header { font-size: 1.1em; font-weight: bold; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 5px; border-radius: 4px; }
             .user-card-header:hover { background: rgba(255,255,255,0.05); }
-            .access-list { margin-top: 10px; padding-left: 10px; max-height: 3000px; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.3s; opacity: 1; }
+            .access-list { margin-top: 10px; padding-left: 10px; padding-right: 6px; max-height: 320px; overflow-y: auto; overflow-x: hidden; transition: max-height 0.3s ease-out, opacity 0.3s; opacity: 1; }
             .access-list.collapsed { max-height: 0; opacity: 0; margin-top: 0; }
             .access-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; margin-top: 5px; background: rgba(255,255,255,0.05); border-radius: 4px; border-left: 3px solid var(--border); }
             .access-item.public { border-left-color: var(--success); }
