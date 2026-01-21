@@ -1,17 +1,17 @@
 <script lang="ts">
-import Badge from './components/Badge.svelte';
+    import Badge from "./components/Badge.svelte";
 
-import CollapseCard from './components/CollapseCard.svelte';
-import Switch from './components/Switch.svelte';
-import type { AppDashboardInfo, UpdatePayload } from './types';
+    import CollapseCard from "./components/CollapseCard.svelte";
+    import Switch from "./components/Switch.svelte";
+    import type { AppDashboardInfo, UpdatePayload } from "./types";
 
-export let dashboards: AppDashboardInfo[];
-export let users: any[];
-export let haUrl: string;
+    export let dashboards: AppDashboardInfo[];
+    export let users: any[];
+    export let haUrl: string;
 
-async function sendUpdate(payload: UpdatePayload) {
-    console.log('Update:', payload);
-}
+    async function sendUpdate(payload: UpdatePayload) {
+        console.log("Update:", payload);
+    }
 </script>
 
 <div class="list-container">
@@ -91,9 +91,9 @@ async function sendUpdate(payload: UpdatePayload) {
     .link-btn {
         text-decoration: none;
         font-size: 0.7em;
-        background: #2c2c2c;
-        border: 1px solid #444;
-        color: #e1e1e1;
+        background: var(--secondary-background-color, #2c2c2c);
+        border: 1px solid var(--divider-color, #444);
+        color: var(--primary-text-color, #e1e1e1);
         padding: 4px 8px;
         border-radius: 4px;
     }
@@ -105,7 +105,10 @@ async function sendUpdate(payload: UpdatePayload) {
     }
 
     .view-item-wrapper {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(
+            --secondary-background-color,
+            rgba(255, 255, 255, 0.05)
+        );
         border-radius: 6px;
         padding: 8px 12px;
     }
@@ -122,7 +125,10 @@ async function sendUpdate(payload: UpdatePayload) {
         gap: 10px;
         cursor: pointer;
         padding: 6px;
-        background: rgba(255, 255, 255, 0.03);
+        background: var(
+            --secondary-background-color,
+            rgba(255, 255, 255, 0.03)
+        );
         border-radius: 4px;
     }
     .user-name {

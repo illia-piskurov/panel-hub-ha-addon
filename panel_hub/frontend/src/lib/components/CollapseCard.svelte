@@ -1,9 +1,9 @@
 <script lang="ts">
-import { slide } from 'svelte/transition';
+    import { slide } from "svelte/transition";
 
-export let title: string = '';
-export let isOpen = false;
-export let bordered = false;
+    export let title: string = "";
+    export let isOpen = false;
+    export let bordered = false;
 </script>
 
 <div class="card-container" class:bordered>
@@ -35,8 +35,8 @@ export let bordered = false;
     }
 
     .card-container.bordered {
-        background: #2c2c2c;
-        border: 1px solid #444;
+        background: var(--card-background-color, #2c2c2c);
+        border: 1px solid var(--divider-color, #444);
         padding: 15px;
     }
 
@@ -46,10 +46,11 @@ export let bordered = false;
         align-items: center;
         cursor: pointer;
         user-select: none;
+        color: var(--primary-text-color, #e1e1e1);
     }
 
     .bordered .header {
-        border-bottom: 1px solid #444;
+        border-bottom: 1px solid var(--divider-color, #444);
         padding-bottom: 10px;
         margin-bottom: 0;
     }
@@ -76,6 +77,7 @@ export let bordered = false;
         transition: transform 0.3s ease;
         font-size: 0.8em;
         display: inline-block;
+        color: var(--secondary-text-color, #888);
     }
     .toggle-icon.collapsed {
         transform: rotate(-90deg);

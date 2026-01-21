@@ -1,5 +1,5 @@
 <script lang="ts">
-export let checked = false;
+    export let checked = false;
 </script>
 
 <label class="switch">
@@ -27,7 +27,7 @@ export let checked = false;
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #555;
+        background-color: var(--disabled-text-color, #555);
         transition: 0.4s;
         border-radius: 20px;
     }
@@ -38,12 +38,12 @@ export let checked = false;
         width: 16px;
         left: 2px;
         bottom: 2px;
-        background-color: white;
+        background-color: var(--primary-background-color, #fff);
         transition: 0.4s;
         border-radius: 50%;
     }
     input:checked + .slider {
-        background-color: #03a9f4;
+        background-color: var(--primary-color, #03a9f4);
     }
     input:checked + .slider:before {
         transform: translateX(20px);

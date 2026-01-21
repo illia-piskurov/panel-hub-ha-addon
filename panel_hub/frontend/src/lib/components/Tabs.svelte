@@ -1,6 +1,6 @@
 <script lang="ts">
-export let items: { value: string; label: string }[] = [];
-export let active: string;
+    export let items: { value: string; label: string }[] = [];
+    export let active: string;
 </script>
 
 <div class="tabs">
@@ -20,7 +20,7 @@ export let active: string;
         display: flex;
         gap: 10px;
         margin-bottom: 20px;
-        border-bottom: 2px solid #444;
+        border-bottom: 2px solid var(--divider-color, #444);
     }
 
     .tab {
@@ -28,19 +28,19 @@ export let active: string;
         cursor: pointer;
         background: transparent;
         border: none;
-        color: #e1e1e1;
+        color: var(--secondary-text-color, #888);
         font-size: 1rem;
         border-bottom: 3px solid transparent;
         transition: all 0.2s;
     }
 
     .tab:hover {
-        color: white;
+        color: var(--primary-text-color, #fff);
     }
 
     .tab.active {
-        color: #03a9f4;
-        border-bottom-color: #03a9f4;
+        color: var(--primary-color, #03a9f4);
+        border-bottom-color: var(--primary-color, #03a9f4);
         font-weight: bold;
     }
 </style>
