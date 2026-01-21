@@ -2,6 +2,20 @@
 
 ## 1.1.2
 
+### Support run without Addon 
+
+> Try like this
+```sh
+docker run -d \
+  -e HA_TOKEN="your_token_here" \
+  -e HA_WS_URL="ws://192.168.1.X:8123/api/websocket" \
+  -v /path/to/your/ha/config:/homeassistant \
+  -p 8000:8000 \
+  panel-hub
+```
+
+## 1.1.2
+
 ### Support Dark/Light System Theme
 
 ## 1.1.0

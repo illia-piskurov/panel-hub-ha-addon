@@ -1,4 +1,4 @@
-import { connectedClients, HA_WS_URL, SUPERVISOR_TOKEN } from './config';
+import { connectedClients, HA_WS_URL, HA_TOKEN } from './config';
 
 const notifyClients = () => {
     connectedClients.forEach((controller) => {
@@ -25,7 +25,7 @@ export const startHAListener = async () => {
                 socket.send(
                     JSON.stringify({
                         type: 'auth',
-                        access_token: SUPERVISOR_TOKEN,
+                        access_token: HA_TOKEN,
                     }),
                 );
             }
@@ -81,7 +81,7 @@ export const saveConfigViaWS = async (
                 socket.send(
                     JSON.stringify({
                         type: 'auth',
-                        access_token: SUPERVISOR_TOKEN,
+                        access_token: HA_TOKEN,
                     }),
                 );
             }
