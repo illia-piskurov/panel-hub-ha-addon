@@ -32,7 +32,7 @@
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
-            if (data.success) window.refreshData();
+            if (data.success) (window as any).refreshData();
         } catch (e) {}
     }
 </script>

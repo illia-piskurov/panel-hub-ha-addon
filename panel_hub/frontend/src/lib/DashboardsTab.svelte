@@ -10,6 +10,22 @@
     export let haUrl: string;
 
     async function sendUpdate(payload: UpdatePayload) {
+        try {
+            const res = await fetch("./api/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data.success) {
+                (window as any).showToast();
+                (window as any).refreshData();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (e) {
+            alert("Network Error");
+        }
         console.log("Update:", payload);
     }
 </script>
@@ -29,7 +45,7 @@
 
             {#each dash.views as view (view.path)}
                 <div class="view-item-wrapper">
-                    <CollapseCard title={view.title}>
+                    <CollapseCard title={view.title} disabled={view.isPublic}>
                         <svelte:fragment slot="header-meta">
                             <span class="path-text">({view.path})</span>
                         </svelte:fragment>
