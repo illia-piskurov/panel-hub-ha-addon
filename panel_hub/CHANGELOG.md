@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+### Support Dark/Light System Theme
+
 ## 1.1.0
 
 ### Major Tech Stack Update
