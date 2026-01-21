@@ -143,7 +143,6 @@
     .user-header {
         font-size: 1.2em;
         font-weight: bold;
-        margin-bottom: 10px;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -151,8 +150,9 @@
         padding-bottom: 10px;
         border-bottom: 1px solid #444;
     }
+
     .toggle-icon {
-        transition: transform 0.3s;
+        transition: transform 0.3s ease;
         font-size: 0.8em;
         display: inline-block;
     }
@@ -170,9 +170,14 @@
         background: #03a9f4;
         color: white;
     }
-
-    .user-dash-section {
+    .access-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
         margin-top: 10px;
+    }
+    .user-dash-section {
+        margin-top: 0;
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 6px;
         overflow: hidden;
@@ -189,8 +194,15 @@
     .user-dash-header:hover {
         background: rgba(255, 255, 255, 0.08);
     }
+    .views-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-bottom: 4px;
+    }
+
     .access-item {
-        margin: 4px 8px;
+        margin: 0 8px;
         border-left: 3px solid #444;
         display: flex;
         justify-content: space-between;
@@ -216,7 +228,6 @@
         font-size: 0.75em;
         opacity: 0.6;
     }
-
     .switch {
         position: relative;
         display: inline-block;

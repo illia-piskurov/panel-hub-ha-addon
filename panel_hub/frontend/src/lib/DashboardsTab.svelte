@@ -158,7 +158,7 @@
         border-radius: 8px 8px 0 0;
     }
     .toggle-icon {
-        transition: transform 0.3s;
+        transition: transform 0.3s ease;
         font-size: 0.8em;
         display: inline-block;
     }
@@ -187,7 +187,13 @@
         padding: 10px;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 6px;
-        margin: 8px 0;
+        margin: 0;
+    }
+    .views-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 10px;
     }
     .view-header {
         display: flex;
