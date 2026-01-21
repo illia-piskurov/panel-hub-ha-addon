@@ -49,26 +49,30 @@ async function sendUpdate(payload: UpdatePayload) {
                         </svelte:fragment>
 
                         {#if !view.isPublic}
-                            {#each users as user (user.id)}
-                                <label class="user-row">
-                                    <Switch
-                                        checked={view.allowedUserIds.includes(
-                                            user.id,
-                                        )}
-                                        on:change={(e) =>
-                                            sendUpdate({
-                                                type: "set_user",
-                                                dashId: dash.id,
-                                                urlPath: dash.url,
-                                                viewPath: view.path,
-                                                userId: user.id,
-                                                isAllowed:
-                                                    e.currentTarget.checked,
-                                            })}
-                                    />
-                                    <span>{user.name}</span>
-                                </label>
-                            {/each}
+                            <div class="users-grid">
+                                {#each users as user (user.id)}
+                                    <label class="user-row">
+                                        <Switch
+                                            checked={view.allowedUserIds.includes(
+                                                user.id,
+                                            )}
+                                            on:change={(e) =>
+                                                sendUpdate({
+                                                    type: "set_user",
+                                                    dashId: dash.id,
+                                                    urlPath: dash.url,
+                                                    viewPath: view.path,
+                                                    userId: user.id,
+                                                    isAllowed:
+                                                        e.currentTarget.checked,
+                                                })}
+                                        />
+                                        <span class="user-name"
+                                            >{user.name}</span
+                                        >
+                                    </label>
+                                {/each}
+                            </div>
                         {/if}
                     </CollapseCard>
                 </div>
@@ -105,12 +109,25 @@ async function sendUpdate(payload: UpdatePayload) {
         border-radius: 6px;
         padding: 8px 12px;
     }
-
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        width: 100%;
+        margin-top: 10px;
+    }
     .user-row {
         display: flex;
         align-items: center;
         gap: 10px;
         cursor: pointer;
-        padding: 4px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
+    }
+    .user-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 </style>
