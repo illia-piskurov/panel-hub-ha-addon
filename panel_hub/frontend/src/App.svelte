@@ -95,7 +95,7 @@
 
         --primary-text-color: #212121;
         --secondary-text-color: #727272;
-        --divider-color: #e0e0e0;
+        --divider-color: #cccccc;
 
         --disabled-text-color: #bdbdbd;
     }
