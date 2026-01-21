@@ -1,17 +1,17 @@
 <script lang="ts">
-    import type { AppDashboardInfo, UpdatePayload } from "./types";
+import Badge from './components/Badge.svelte';
 
-    import CollapseCard from "./components/CollapseCard.svelte";
-    import Switch from "./components/Switch.svelte";
-    import Badge from "./components/Badge.svelte";
+import CollapseCard from './components/CollapseCard.svelte';
+import Switch from './components/Switch.svelte';
+import type { AppDashboardInfo, UpdatePayload } from './types';
 
-    export let dashboards: AppDashboardInfo[];
-    export let users: any[];
-    export let haUrl: string;
+export let dashboards: AppDashboardInfo[];
+export let users: any[];
+export let haUrl: string;
 
-    async function sendUpdate(payload: UpdatePayload) {
-        console.log("Update:", payload);
-    }
+async function sendUpdate(payload: UpdatePayload) {
+    console.log('Update:', payload);
+}
 </script>
 
 <div class="list-container">

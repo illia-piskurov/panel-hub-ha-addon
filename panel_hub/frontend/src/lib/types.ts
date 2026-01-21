@@ -41,7 +41,7 @@ export interface AppDashboardInfo {
     views: AppViewInfo[];
 }
 export interface UpdatePayload {
-    type: "set_public" | "set_user";
+    type: 'set_public' | 'set_user';
     dashId: string;
     urlPath: string;
     viewPath: string;

@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { slide } from "svelte/transition";
+import { slide } from 'svelte/transition';
 
-    export let title: string = "";
-    export let isOpen = false;
-    export let bordered = false;
+export let title: string = '';
+export let isOpen = false;
+export let bordered = false;
 </script>
 
 <div class="card-container" class:bordered>

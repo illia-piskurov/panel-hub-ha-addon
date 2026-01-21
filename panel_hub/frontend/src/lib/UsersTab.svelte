@@ -1,40 +1,40 @@
 <script lang="ts">
-    import type { AppDashboardInfo } from "./types";
+import Badge from './components/Badge.svelte';
 
-    import CollapseCard from "./components/CollapseCard.svelte";
-    import Switch from "./components/Switch.svelte";
-    import Badge from "./components/Badge.svelte";
+import CollapseCard from './components/CollapseCard.svelte';
+import Switch from './components/Switch.svelte';
+import type { AppDashboardInfo } from './types';
 
-    export let dashboards: AppDashboardInfo[];
-    export let users: any[];
+export let dashboards: AppDashboardInfo[];
+export let users: any[];
 
-    function getStats(userId: string) {
-        let count = 0;
-        let total = 0;
-        dashboards.forEach((d) => {
-            d.views.forEach((v) => {
-                total++;
-                if (v.isPublic || v.allowedUserIds.includes(userId)) count++;
-            });
+function getStats(userId: string) {
+    let count = 0;
+    let total = 0;
+    dashboards.forEach((d) => {
+        d.views.forEach((v) => {
+            total++;
+            if (v.isPublic || v.allowedUserIds.includes(userId)) count++;
         });
-        return { count, total };
-    }
+    });
+    return { count, total };
+}
 
-    function isAllowed(view: any, userId: string) {
-        return view.isPublic || view.allowedUserIds.includes(userId);
-    }
+function isAllowed(view: any, userId: string) {
+    return view.isPublic || view.allowedUserIds.includes(userId);
+}
 
-    async function sendUpdate(payload: any) {
-        try {
-            const res = await fetch("./api/update", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const data = await res.json();
-            if (data.success) window.refreshData();
-        } catch (e) {}
-    }
+async function sendUpdate(payload: any) {
+    try {
+        const res = await fetch('./api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success) window.refreshData();
+    } catch (e) {}
+}
 </script>
 
 <div class="users-list-container">

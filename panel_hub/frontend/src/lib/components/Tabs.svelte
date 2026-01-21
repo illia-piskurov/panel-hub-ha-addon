@@ -1,6 +1,6 @@
 <script lang="ts">
-    export let items: { value: string; label: string }[] = [];
-    export let active: string;
+export let items: { value: string; label: string }[] = [];
+export let active: string;
 </script>
 
 <div class="tabs">

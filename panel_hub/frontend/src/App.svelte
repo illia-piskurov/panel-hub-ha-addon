@@ -1,66 +1,66 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import DashboardsTab from "./lib/DashboardsTab.svelte";
-    import UsersTab from "./lib/UsersTab.svelte";
-    import type { AppDashboardInfo } from "./lib/types";
-    import Tabs from "./lib/components/Tabs.svelte";
+import { onMount } from 'svelte';
+import Tabs from './lib/components/Tabs.svelte';
+import DashboardsTab from './lib/DashboardsTab.svelte';
+import type { AppDashboardInfo } from './lib/types';
+import UsersTab from './lib/UsersTab.svelte';
 
-    let activeTab = "dashboards";
-    const tabItems = [
-        { value: "dashboards", label: "By Dashboards" },
-        { value: "users", label: "By Users" },
-    ];
-    let dashboards: AppDashboardInfo[] = [];
-    let users: any[] = [];
-    let haUrl = "";
-    let toastVisible = false;
-    let isConnected = false;
+let activeTab = 'dashboards';
+const tabItems = [
+    { value: 'dashboards', label: 'By Dashboards' },
+    { value: 'users', label: 'By Users' },
+];
+let dashboards: AppDashboardInfo[] = [];
+let users: any[] = [];
+let haUrl = '';
+let toastVisible = false;
+let isConnected = false;
 
-    async function loadData() {
-        try {
-            const [dashRes, userRes, configRes] = await Promise.all([
-                fetch("./api/structure"),
-                fetch("./api/users"),
-                fetch("./api/config"),
-            ]);
-            dashboards = await dashRes.json();
-            users = await userRes.json();
-            const config = await configRes.json();
-            haUrl = config.haUrl;
-        } catch (e) {
-            console.error("Failed to load data", e);
-        }
+async function loadData() {
+    try {
+        const [dashRes, userRes, configRes] = await Promise.all([
+            fetch('./api/structure'),
+            fetch('./api/users'),
+            fetch('./api/config'),
+        ]);
+        dashboards = await dashRes.json();
+        users = await userRes.json();
+        const config = await configRes.json();
+        haUrl = config.haUrl;
+    } catch (e) {
+        console.error('Failed to load data', e);
     }
+}
 
-    async function reloadData() {
-        try {
-            const [dashRes, userRes] = await Promise.all([
-                fetch("./api/structure"),
-                fetch("./api/users"),
-            ]);
-            dashboards = await dashRes.json();
-            users = await userRes.json();
-        } catch (e) {
-            console.error(e);
-        }
+async function reloadData() {
+    try {
+        const [dashRes, userRes] = await Promise.all([
+            fetch('./api/structure'),
+            fetch('./api/users'),
+        ]);
+        dashboards = await dashRes.json();
+        users = await userRes.json();
+    } catch (e) {
+        console.error(e);
     }
+}
 
-    (window as any).showToast = () => {
-        toastVisible = true;
-        setTimeout(() => (toastVisible = false), 3000);
-    };
-    (window as any).refreshData = reloadData;
+(window as any).showToast = () => {
+    toastVisible = true;
+    setTimeout(() => (toastVisible = false), 3000);
+};
+(window as any).refreshData = reloadData;
 
-    onMount(() => {
-        loadData();
+onMount(() => {
+    loadData();
 
-        const evtSource = new EventSource("./api/stream");
-        evtSource.onopen = () => (isConnected = true);
-        evtSource.onerror = () => (isConnected = false);
-        evtSource.onmessage = () => reloadData();
+    const evtSource = new EventSource('./api/stream');
+    evtSource.onopen = () => (isConnected = true);
+    evtSource.onerror = () => (isConnected = false);
+    evtSource.onmessage = () => reloadData();
 
-        return () => evtSource.close();
-    });
+    return () => evtSource.close();
+});
 </script>
 
 <main>

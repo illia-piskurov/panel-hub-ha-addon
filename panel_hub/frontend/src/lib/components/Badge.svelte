@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let variant: "default" | "success" | "primary" = "default";
+export const variant: 'default' | 'success' | 'primary' = 'default';
 </script>
 
 <span class="badge {variant}">

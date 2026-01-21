@@ -1,10 +1,10 @@
-import { file } from "bun";
+import { file } from 'bun';
 import {
     AUTH_FILE_PATH,
     LOVELANCE_DASHBOARD_FILE_PATH,
     OPTIONS_PATH,
-} from "./config";
-import { saveConfigViaWS } from "./ha-api";
+} from './config';
+import { saveConfigViaWS } from './ha-api';
 import type {
     AddonConfig,
     AppDashboardInfo,
@@ -14,16 +14,16 @@ import type {
     HADashboardItem,
     HAViewVisibility,
     UpdatePayload,
-} from "./types";
+} from './types';
 
 export const getAddonConfig = async (): Promise<AddonConfig> => {
     try {
         const f = file(OPTIONS_PATH);
         if (!(await f.exists()))
-            return { ha_url: "http://homeassistant.local:8123" };
+            return { ha_url: 'http://homeassistant.local:8123' };
         return await f.json();
     } catch (e) {
-        return { ha_url: "http://homeassistant.local:8123" };
+        return { ha_url: 'http://homeassistant.local:8123' };
     }
 };
 
@@ -42,7 +42,7 @@ const get_dashboard_details = async (
     dashboard: HADashboardItem,
 ): Promise<AppDashboardInfo> => {
     const filename =
-        dashboard.id === "" ? "lovelace" : `lovelace.${dashboard.id}`;
+        dashboard.id === '' ? 'lovelace' : `lovelace.${dashboard.id}`;
     const f = file(`/homeassistant/.storage/${filename}`);
     const result: AppDashboardInfo = {
         id: dashboard.id,
@@ -69,7 +69,7 @@ const get_dashboard_details = async (
             return {
                 title: view.title || `Tab ${index + 1}`,
                 path: view.path || String(index),
-                icon: view.icon || "mdi:view-dashboard",
+                icon: view.icon || 'mdi:view-dashboard',
                 isPublic: isPublic,
                 allowedUserIds: allowedUsers,
             };
@@ -90,7 +90,7 @@ export const fetchUsersData = async () => {
             .map((user: any) => ({
                 name: user.name,
                 id: user.id,
-                role: user.is_owner ? "Owner" : "User",
+                role: user.is_owner ? 'Owner' : 'User',
             }));
     } catch (err) {
         return [];
@@ -102,10 +102,10 @@ export const fetchDashboardsData = async () => {
 
     // Add the default Lovelace dashboard (Overview)
     const defaultDashboard: HADashboardItem = {
-        id: "",
-        title: "Overview",
-        url_path: "lovelace",
-        mode: "storage",
+        id: '',
+        title: 'Overview',
+        url_path: 'lovelace',
+        mode: 'storage',
     };
 
     const allDashboards = [defaultDashboard, ...dashboardsList];
@@ -114,34 +114,34 @@ export const fetchDashboardsData = async () => {
 
 export const updateDashboardAccess = async (payload: UpdatePayload) => {
     const filename =
-        payload.dashId === "" ? "lovelace" : `lovelace.${payload.dashId}`;
+        payload.dashId === '' ? 'lovelace' : `lovelace.${payload.dashId}`;
     const f = file(`/homeassistant/.storage/${filename}`);
 
     if (!(await f.exists()))
-        return { success: false, error: "Dashboard file not found" };
+        return { success: false, error: 'Dashboard file not found' };
 
     try {
         const content = (await f.json()) as HADashboardConfig;
         const views = content.data.config.views;
 
         if (!views)
-            return { success: false, error: "No views found in dashboard" };
+            return { success: false, error: 'No views found in dashboard' };
 
         const targetView = views.find((v, index) => {
             const currentPath = v.path || String(index);
             return currentPath === payload.viewPath;
         });
 
-        if (!targetView) return { success: false, error: "View not found" };
+        if (!targetView) return { success: false, error: 'View not found' };
 
-        if (payload.type === "set_public") {
+        if (payload.type === 'set_public') {
             if (payload.isPublic) {
                 delete targetView.visible;
             } else {
                 if (!targetView.visible || !Array.isArray(targetView.visible))
                     targetView.visible = [];
             }
-        } else if (payload.type === "set_user") {
+        } else if (payload.type === 'set_user') {
             if (!Array.isArray(targetView.visible)) targetView.visible = [];
             const targetVisible = targetView.visible as HAViewVisibility[];
             const userId = payload.userId!;
@@ -162,7 +162,7 @@ export const updateDashboardAccess = async (payload: UpdatePayload) => {
         );
 
         if (success) return { success: true };
-        else return { success: false, error: "HA refused to save config" };
+        else return { success: false, error: 'HA refused to save config' };
     } catch (e) {
         console.error(e);
         return { success: false, error: String(e) };

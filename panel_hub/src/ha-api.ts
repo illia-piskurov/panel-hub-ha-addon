@@ -1,9 +1,9 @@
-import { connectedClients, HA_WS_URL, SUPERVISOR_TOKEN } from "./config";
+import { connectedClients, HA_WS_URL, SUPERVISOR_TOKEN } from './config';
 
 const notifyClients = () => {
     connectedClients.forEach((controller) => {
         try {
-            controller.enqueue("data: update\n\n");
+            controller.enqueue('data: update\n\n');
         } catch (e) {
             connectedClients.delete(controller);
         }
@@ -21,32 +21,32 @@ export const startHAListener = async () => {
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data.toString());
 
-            if (data.type === "auth_required") {
+            if (data.type === 'auth_required') {
                 socket.send(
                     JSON.stringify({
-                        type: "auth",
+                        type: 'auth',
                         access_token: SUPERVISOR_TOKEN,
                     }),
                 );
             }
 
-            if (data.type === "auth_ok") {
-                console.log("✅ HA Listener Authenticated.");
+            if (data.type === 'auth_ok') {
+                console.log('✅ HA Listener Authenticated.');
                 socket.send(
                     JSON.stringify({
                         id: messageId++,
-                        type: "subscribe_events",
-                        event_type: "lovelace_updated",
+                        type: 'subscribe_events',
+                        event_type: 'lovelace_updated',
                     }),
                 );
             }
 
             if (
-                data.type === "event" &&
+                data.type === 'event' &&
                 data.event &&
-                data.event.event_type === "lovelace_updated"
+                data.event.event_type === 'lovelace_updated'
             ) {
-                console.log("📢 Event: Lovelace Updated.");
+                console.log('📢 Event: Lovelace Updated.');
                 notifyClients();
             }
         };
@@ -56,7 +56,7 @@ export const startHAListener = async () => {
         };
 
         socket.onerror = (e) => {
-            console.error("❌ HA Listener Error:", e);
+            console.error('❌ HA Listener Error:', e);
         };
     };
 
@@ -77,22 +77,22 @@ export const saveConfigViaWS = async (
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data.toString());
 
-            if (data.type === "auth_required") {
+            if (data.type === 'auth_required') {
                 socket.send(
                     JSON.stringify({
-                        type: "auth",
+                        type: 'auth',
                         access_token: SUPERVISOR_TOKEN,
                     }),
                 );
             }
 
-            if (data.type === "auth_ok") {
+            if (data.type === 'auth_ok') {
                 authenticated = true;
-                const targetUrlPath = urlPath === "lovelace" ? null : urlPath;
+                const targetUrlPath = urlPath === 'lovelace' ? null : urlPath;
                 socket.send(
                     JSON.stringify({
                         id: messageId,
-                        type: "lovelace/config/save",
+                        type: 'lovelace/config/save',
                         url_path: targetUrlPath,
                         config: config,
                     }),
@@ -103,7 +103,7 @@ export const saveConfigViaWS = async (
                 if (data.success) {
                     resolve(true);
                 } else {
-                    console.error("❌ Save failed:", data.error);
+                    console.error('❌ Save failed:', data.error);
                     resolve(false);
                 }
                 socket.close();
