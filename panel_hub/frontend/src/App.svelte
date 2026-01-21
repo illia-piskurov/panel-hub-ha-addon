@@ -3,8 +3,13 @@
     import DashboardsTab from "./lib/DashboardsTab.svelte";
     import UsersTab from "./lib/UsersTab.svelte";
     import type { AppDashboardInfo } from "./lib/types";
+    import Tabs from "./lib/components/Tabs.svelte";
 
     let activeTab = "dashboards";
+    const tabItems = [
+        { value: "dashboards", label: "By Dashboards" },
+        { value: "users", label: "By Users" },
+    ];
     let dashboards: AppDashboardInfo[] = [];
     let users: any[] = [];
     let haUrl = "";
@@ -40,11 +45,11 @@
         }
     }
 
-    window.showToast = () => {
+    (window as any).showToast = () => {
         toastVisible = true;
         setTimeout(() => (toastVisible = false), 3000);
     };
-    window.refreshData = reloadData;
+    (window as any).refreshData = reloadData;
 
     onMount(() => {
         loadData();
@@ -70,27 +75,12 @@
         </div>
     </div>
 
-    <div class="tabs">
-        <button
-            class="tab"
-            class:active={activeTab === "dashboards"}
-            on:click={() => (activeTab = "dashboards")}
-        >
-            By Dashboards
-        </button>
-        <button
-            class="tab"
-            class:active={activeTab === "users"}
-            on:click={() => (activeTab = "users")}
-        >
-            By Users
-        </button>
-    </div>
+    <Tabs items={tabItems} bind:active={activeTab} />
 
     {#if activeTab === "dashboards"}
         <DashboardsTab {dashboards} {users} {haUrl} />
-    {:else}
-        <UsersTab {dashboards} {users} {haUrl} />
+    {:else if activeTab === "users"}
+        <UsersTab {dashboards} {users} />
     {/if}
 
     <div id="toast" class:show={toastVisible}>Changes saved</div>
@@ -128,28 +118,6 @@
         border-radius: 50%;
         display: inline-block;
         transition: background 0.3s;
-    }
-
-    .tabs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #444;
-    }
-    .tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        background: transparent;
-        border: none;
-        color: #e1e1e1;
-        font-size: 1rem;
-        border-bottom: 3px solid transparent;
-        transition: all 0.2s;
-    }
-    .tab.active {
-        color: #03a9f4;
-        border-bottom-color: #03a9f4;
-        font-weight: bold;
     }
 
     #toast {
