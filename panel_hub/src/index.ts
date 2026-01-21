@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { serve } from "bun";
+import { serveStatic } from "hono/bun";
 import { connectedClients } from "./config";
 import {
     fetchDashboardsData,
@@ -9,12 +10,11 @@ import {
 } from "./data-service";
 import { startHAListener } from "./ha-api";
 import type { UpdatePayload } from "./types";
-import { renderPage } from "./ui";
+
 
 startHAListener();
 
 const app = new Hono();
-
 const ingressPrefix = process.env.INGRESS_PATH || "";
 
 app.use("*", async (c, next) => {
@@ -26,6 +26,12 @@ app.use("*", async (c, next) => {
     console.log(`[${new Date().toISOString()}] ${c.req.method} ${c.req.path}`);
 
     await next();
+});
+
+app.get("/api/config", async (c) => {
+    const config = await getAddonConfig();
+    const cleanHaUrl = config.ha_url.replace(/\/$/, "");
+    return c.json({ haUrl: cleanHaUrl });
 });
 
 app.get("/api/stream", (c) => {
@@ -62,6 +68,24 @@ app.get("/api/stream", (c) => {
     });
 });
 
+app.get("/api/users", async (c) => {
+    try {
+        const users = await fetchUsersData();
+        return c.json(users);
+    } catch (e) {
+        return c.json({ error: String(e) }, 500);
+    }
+});
+
+app.get("/api/structure", async (c) => {
+    try {
+        const dashboards = await fetchDashboardsData();
+        return c.json(dashboards);
+    } catch (e) {
+        return c.json({ error: String(e) }, 500);
+    }
+});
+
 app.post("/api/update", async (c) => {
     try {
         const payload = (await c.req.json()) as UpdatePayload;
@@ -80,25 +104,8 @@ app.post("/api/update", async (c) => {
     }
 });
 
-app.get("/", async (c) => {
-    console.log("[DEBUG] Rendering main page...");
-    try {
-        const config = await getAddonConfig();
-        const users = await fetchUsersData();
-        const dashboards = await fetchDashboardsData();
-
-        console.log(
-            `[DEBUG] Rendering with ${users.length} users, ${dashboards.length} dashboards`,
-        );
-
-        const html = renderPage(users, dashboards, config.ha_url);
-
-        return c.html(html);
-    } catch (e) {
-        console.error("[ERROR] Failed to render page:", e);
-        return c.text(`Error: ${String(e)}`, 500);
-    }
-});
+app.use("/*", serveStatic({ root: "./dist" }));
+app.get("*", serveStatic({ path: "./dist/index.html" }));
 
 app.notFound((c) => {
     console.log(`[WARN] Not found: ${c.req.path}`);
